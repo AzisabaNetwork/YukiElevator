@@ -1,10 +1,10 @@
-name: ${project.name}
-version: ${project.version}
-main: net.azisaba.yukielevator.${project.name}
-description: ${project.description}
-website: ${project.url}
+name: YukiElevator
+version: ${version}
+main: net.azisaba.yukielevator.YukiElevator
+description: シンプルなエレベータープラグイン
+website: https://github.com/AzisabaNetwork/YukiElevator
 author: YukiLeafX
-api-version: 1.13
+api-version: '1.21'
 permissions:
   yukielevator.use:
     default: true

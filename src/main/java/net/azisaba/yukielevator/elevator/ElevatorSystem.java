@@ -6,11 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 import net.azisaba.yukielevator.config.ElevatorConfig;
 
@@ -32,31 +28,42 @@ public class ElevatorSystem {
         return height;
     }
 
-    @SuppressWarnings("deprecation")
     public boolean isSafe(Block block) {
-        return block.getType().isTransparent();
+        if ( block == null ) {
+            return false;
+        }
+        if ( !block.isPassable() ) {
+            return false;
+        }
+        Material type = block.getType();
+        return type != Material.LAVA
+                && type != Material.FIRE
+                && type != Material.SOUL_FIRE
+                && type != Material.CACTUS
+                && type != Material.SWEET_BERRY_BUSH;
     }
 
     public boolean isFloor(Block baseFrom) {
-        if ( baseFrom.getType() != baseType ) {
+        if ( baseFrom == null || baseFrom.getType() != baseType ) {
             return false;
         }
         return IntStream.range(1, height).allMatch(distance -> isSafe(baseFrom.getRelative(BlockFace.UP, distance)));
     }
 
     public Block tryFindFloor(Block baseFrom, BlockFace face) {
-        Vector direction = face.getDirection();
-        Location loc = baseFrom.getLocation().setDirection(direction);
-        int maxDistance = baseFrom.getWorld().getMaxHeight();
-        BlockIterator it = new BlockIterator(loc, 0, maxDistance);
+        if ( baseFrom == null || (face != BlockFace.UP && face != BlockFace.DOWN) ) {
+            return null;
+        }
 
-        Iterators.advance(it, height);
-        for ( Block baseTo : Lists.newArrayList(it) ) {
-            if ( isFloor(baseTo) ) {
-                return baseTo;
-            }
-            if ( !isSafe(baseTo) ) {
-                return null;
+        int step = (face == BlockFace.UP) ? 1 : -1;
+        int minY = baseFrom.getWorld().getMinHeight();
+        int maxY = baseFrom.getWorld().getMaxHeight();
+
+        int startY = baseFrom.getY() + step * height;
+        for ( int y = startY; y >= minY && y < maxY; y += step ) {
+            Block target = baseFrom.getWorld().getBlockAt(baseFrom.getX(), y, baseFrom.getZ());
+            if ( isFloor(target) ) {
+                return target;
             }
         }
         return null;

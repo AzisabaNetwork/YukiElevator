@@ -9,7 +9,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
+
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 
 import net.azisaba.yukielevator.YukiElevator;
 
@@ -26,12 +27,9 @@ public class ElevatorUpListener implements Listener {
     }
 
     @EventHandler
-    public void onElevatorUp(PlayerMoveEvent event) {
+    public void onElevatorUp(PlayerJumpEvent event) {
         Player player = event.getPlayer();
 
-        if ( player.isOnGround() ) {
-            return;
-        }
         if ( player.isDead() ) {
             return;
         }
@@ -39,9 +37,6 @@ public class ElevatorUpListener implements Listener {
             return;
         }
         if ( player.isSwimming() ) {
-            return;
-        }
-        if ( player.getVelocity().getY() <= 0 ) {
             return;
         }
 
@@ -65,6 +60,6 @@ public class ElevatorUpListener implements Listener {
 
         player.teleport(playerTo);
         player.playSound(playerTo, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-        player.getWorld().spawnParticle(Particle.TOTEM, playerTo, 50, 0.2, 0.2, 0.2, 0.5);
+        player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, playerTo, 50, 0.2, 0.2, 0.2, 0.5);
     }
 }

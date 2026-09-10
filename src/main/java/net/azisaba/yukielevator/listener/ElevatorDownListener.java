@@ -32,6 +32,15 @@ public class ElevatorDownListener implements Listener {
         if ( !event.isSneaking() ) {
             return;
         }
+        if ( player.isDead() ) {
+            return;
+        }
+        if ( player.isFlying() ) {
+            return;
+        }
+        if ( player.isSwimming() ) {
+            return;
+        }
 
         Block baseFrom = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
         if ( !plugin.getSystem().isFloor(baseFrom) ) {
@@ -53,6 +62,6 @@ public class ElevatorDownListener implements Listener {
 
         player.teleport(playerTo);
         player.playSound(playerTo, Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-        player.getWorld().spawnParticle(Particle.TOTEM, playerTo, 50, 0.2, 0.2, 0.2, 0.5);
+        player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, playerTo, 50, 0.2, 0.2, 0.2, 0.5);
     }
 }

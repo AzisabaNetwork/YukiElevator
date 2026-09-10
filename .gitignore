@@ -109,4 +109,12 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea/
+*.iml
+
 # End of https://www.gitignore.io/api/java,maven,eclipse
