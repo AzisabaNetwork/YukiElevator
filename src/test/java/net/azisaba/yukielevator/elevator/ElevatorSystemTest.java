@@ -3,6 +3,7 @@ package net.azisaba.yukielevator.elevator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -124,12 +125,109 @@ class ElevatorSystemTest {
         when(f2.getType()).thenReturn(Material.DIAMOND_BLOCK);
         when(f2.isPassable()).thenReturn(false);
 
-        // Upward search from Floor 1 should find Floor 2 despite stone blocks at Y=14,15!
+        // Upward search from Floor 1 should be blocked by stone blocks at Y=14,15!
+        Block foundUp = system.tryFindFloor(f1, BlockFace.UP);
+        assertNull(foundUp);
+
+        // Downward search from Floor 2 should be blocked by stone blocks at Y=15,14!
+        Block foundDown = system.tryFindFloor(f2, BlockFace.DOWN);
+        assertNull(foundDown);
+    }
+
+    @Test
+    void testTryFindFloorWithoutObstacles() {
+        World world = mock(World.class);
+        when(world.getMinHeight()).thenReturn(-64);
+        when(world.getMaxHeight()).thenReturn(320);
+
+        Map<Integer, Block> column = new HashMap<>();
+        for ( int y = -64; y < 320; y++ ) {
+            Block b = mock(Block.class);
+            when(b.getWorld()).thenReturn(world);
+            when(b.getX()).thenReturn(0);
+            when(b.getY()).thenReturn(y);
+            when(b.getZ()).thenReturn(0);
+            when(b.getType()).thenReturn(Material.AIR);
+            when(b.isPassable()).thenReturn(true);
+            when(b.getRelative(any(BlockFace.class), anyInt())).thenAnswer(invocation -> {
+                BlockFace face = invocation.getArgument(0);
+                int dist = invocation.getArgument(1);
+                int targetY = ((Block) invocation.getMock()).getY() + (face == BlockFace.UP ? dist : -dist);
+                return column.get(targetY);
+            });
+            column.put(y, b);
+        }
+
+        when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(invocation -> column.get(invocation.<Integer>getArgument(1)));
+
+        // Floor 1 at Y = 10 (Diamond Block)
+        Block f1 = column.get(10);
+        when(f1.getType()).thenReturn(Material.DIAMOND_BLOCK);
+        when(f1.isPassable()).thenReturn(false);
+
+        // Floor 2 at Y = 20 (Diamond Block)
+        Block f2 = column.get(20);
+        when(f2.getType()).thenReturn(Material.DIAMOND_BLOCK);
+        when(f2.isPassable()).thenReturn(false);
+
+        // Upward search from Floor 1 should find Floor 2
         Block foundUp = system.tryFindFloor(f1, BlockFace.UP);
         assertNotNull(foundUp);
         assertEquals(20, foundUp.getY());
 
-        // Downward search from Floor 2 should find Floor 1 despite stone blocks at Y=15,14!
+        // Downward search from Floor 2 should find Floor 1
+        Block foundDown = system.tryFindFloor(f2, BlockFace.DOWN);
+        assertNotNull(foundDown);
+        assertEquals(10, foundDown.getY());
+    }
+
+    @Test
+    void testOneWayElevatorWithObstacleUnderUpperFloor() {
+        World world = mock(World.class);
+        when(world.getMinHeight()).thenReturn(-64);
+        when(world.getMaxHeight()).thenReturn(320);
+
+        Map<Integer, Block> column = new HashMap<>();
+        for ( int y = -64; y < 320; y++ ) {
+            Block b = mock(Block.class);
+            when(b.getWorld()).thenReturn(world);
+            when(b.getX()).thenReturn(0);
+            when(b.getY()).thenReturn(y);
+            when(b.getZ()).thenReturn(0);
+            when(b.getType()).thenReturn(Material.AIR);
+            when(b.isPassable()).thenReturn(true);
+            when(b.getRelative(any(BlockFace.class), anyInt())).thenAnswer(invocation -> {
+                BlockFace face = invocation.getArgument(0);
+                int dist = invocation.getArgument(1);
+                int targetY = ((Block) invocation.getMock()).getY() + (face == BlockFace.UP ? dist : -dist);
+                return column.get(targetY);
+            });
+            column.put(y, b);
+        }
+
+        when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(invocation -> column.get(invocation.<Integer>getArgument(1)));
+
+        // Floor 1 at Y = 10 (Diamond Block)
+        Block f1 = column.get(10);
+        when(f1.getType()).thenReturn(Material.DIAMOND_BLOCK);
+        when(f1.isPassable()).thenReturn(false);
+
+        // Obstacles (e.g. Red Concrete / Stone) placed at bottom 2 blocks of Floor 2: Y = 13, 14
+        when(column.get(13).getType()).thenReturn(Material.RED_CONCRETE);
+        when(column.get(13).isPassable()).thenReturn(false);
+        when(column.get(14).getType()).thenReturn(Material.RED_CONCRETE);
+        when(column.get(14).isPassable()).thenReturn(false);
+
+        // Floor 2 at Y = 15 (Diamond Block)
+        Block f2 = column.get(15);
+        when(f2.getType()).thenReturn(Material.DIAMOND_BLOCK);
+        when(f2.isPassable()).thenReturn(false);
+
+        // Upward search from Floor 1 should be blocked by red concrete at Y = 13
+        Block foundUp = system.tryFindFloor(f1, BlockFace.UP);
+        assertNull(foundUp);
+
+        // Downward search from Floor 2 skips Y=14, 13 (within height offset) and should successfully find Floor 1!
         Block foundDown = system.tryFindFloor(f2, BlockFace.DOWN);
         assertNotNull(foundDown);
         assertEquals(10, foundDown.getY());

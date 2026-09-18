@@ -65,6 +65,9 @@ public class ElevatorSystem {
             if ( isFloor(target) ) {
                 return target;
             }
+            if ( !isSafe(target) ) {
+                return null;
+            }
         }
         return null;
     }
