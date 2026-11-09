@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.azisaba"
-version = "3.8.1+1.21.11"
+version = "3.8.2+1.21.11"
 description = "シンプルなエレベータープラグイン"
 
 repositories {
