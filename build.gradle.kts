@@ -1,5 +1,6 @@
 plugins {
-    id("java")
+    kotlin("jvm") version "2.4.21"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "net.azisaba"
@@ -12,14 +13,11 @@ repositories {
         name = "papermc-repo"
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
-    maven {
-        name = "spigot-repo"
-        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    implementation(kotlin("stdlib"))
 
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
@@ -27,21 +25,27 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+kotlin {
+    jvmToolchain(21)
 }
 
 tasks {
-    compileJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
+    jar {
+        archiveClassifier.set("plain")
     }
 
-    compileTestJava {
-        options.encoding = "UTF-8"
-        options.release.set(21)
+    shadowJar {
+        archiveClassifier.set("")
+        // 他プラグインが同梱する Kotlin と衝突しないようにリロケートする
+        relocate("kotlin", "net.azisaba.yukielevator.libs.kotlin")
+        relocate("org.jetbrains.annotations", "net.azisaba.yukielevator.libs.jetbrains.annotations")
+        relocate("org.intellij.lang.annotations", "net.azisaba.yukielevator.libs.intellij.annotations")
+        exclude("META-INF/*.kotlin_module", "META-INF/versions/**", "META-INF/maven/**")
+        minimize()
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 
     test {

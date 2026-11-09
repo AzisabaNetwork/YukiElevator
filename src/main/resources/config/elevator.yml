@@ -1,2 +1,4 @@
 baseBlockType: DIAMOND_BLOCK
 elevatorHeight: 3
+# エレベーター使用後、上昇・下降どちらも受け付けない時間 (ミリ秒)
+cooldownMillis: 500
